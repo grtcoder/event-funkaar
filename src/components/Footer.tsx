@@ -12,7 +12,7 @@ export default function Footer() {
           </div>
 
           <nav className="flex flex-wrap gap-6">
-            {["#home", "#about", "#services", "#why-us", "#clients", "#contact"].map((href) => (
+            {["#home", "#about", "#services", "#why-us", "#testimonials", "#clients", "#contact"].map((href) => (
               <a
                 key={href}
                 href={href}
