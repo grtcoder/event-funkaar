@@ -2,23 +2,58 @@
 
 import { useState } from "react";
 
+const WEB3FORMS_ACCESS_KEY = process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY ?? "";
+
 export default function ContactSection() {
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
     eventType: "",
+    eventStartDate: "",
+    eventEndDate: "",
     message: "",
   });
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSent(true);
+    setError("");
+    setSending(true);
+
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_key: WEB3FORMS_ACCESS_KEY,
+          subject: `New event enquiry from ${form.name}`,
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          event_type: form.eventType,
+          event_start_date: form.eventStartDate,
+          event_end_date: form.eventEndDate,
+          message: form.message,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSent(true);
+      } else {
+        setError(data.message || "Something went wrong. Please try again.");
+      }
+    } catch {
+      setError("Could not send message. Please check your connection and try again.");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -44,7 +79,7 @@ export default function ContactSection() {
                 {
                   icon: "📍",
                   label: "Location",
-                  value: "Dehradun, Uttarakhand, India",
+                  value: "Pan India",
                 },
                 {
                   icon: "🏢",
@@ -149,12 +184,41 @@ export default function ContactSection() {
                       <option value="">Select type…</option>
                       <option>Corporate Event / Conference</option>
                       <option>Wedding</option>
-                      <option>Private Party / Social Gathering</option>
+                      <option>Private Party</option>
                       <option>Live Event</option>
                       <option>Artist Management</option>
                       <option>A/V Equipment Rental</option>
                       <option>Other</option>
                     </select>
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">
+                      Event Start Date
+                    </label>
+                    <input
+                      name="eventStartDate"
+                      type="date"
+                      value={form.eventStartDate}
+                      onChange={handleChange}
+                      max={form.eventEndDate || undefined}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#FF6B35] transition-colors bg-[#f9f7f4] text-gray-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">
+                      Event End Date
+                    </label>
+                    <input
+                      name="eventEndDate"
+                      type="date"
+                      value={form.eventEndDate}
+                      onChange={handleChange}
+                      min={form.eventStartDate || undefined}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#FF6B35] transition-colors bg-[#f9f7f4] text-gray-600"
+                    />
                   </div>
                 </div>
 
@@ -167,16 +231,21 @@ export default function ContactSection() {
                     rows={4}
                     value={form.message}
                     onChange={handleChange}
-                    placeholder="Briefly describe your event, expected date, and number of guests…"
+                    placeholder="Briefly describe your event and number of guests…"
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#FF6B35] transition-colors bg-[#f9f7f4] resize-none"
                   />
                 </div>
 
+                {error && (
+                  <p className="text-sm text-red-500 font-medium">{error}</p>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full py-4 rounded-xl bg-[#FF6B35] text-white font-bold text-sm hover:bg-[#e85d2a] transition-colors"
+                  disabled={sending}
+                  className="w-full py-4 rounded-xl bg-[#FF6B35] text-white font-bold text-sm hover:bg-[#e85d2a] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Send Message
+                  {sending ? "Sending…" : "Send Message"}
                 </button>
               </form>
             )}

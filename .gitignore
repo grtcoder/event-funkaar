@@ -32,9 +32,14 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.local.example
 
 # vercel
 .vercel
+
+# raw/unoptimized source photos - only the compressed gallery/ copies are deployed
+public/event-images/*
+!public/event-images/gallery
 
 # typescript
 *.tsbuildinfo
